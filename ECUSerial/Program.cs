@@ -84,10 +84,10 @@ namespace RX7Interface
 
 
             BackgroundWorker worker = new();
-            worker.DoWork += worker_DoWork;
-            worker.RunWorkerCompleted += worker_RunWorkerCompleted;
-            worker.ProgressChanged += worker_ProgressChanged;
-            worker.WorkerReportsProgress = true;
+            worker.DoWork += worker_DoWork!;
+            worker.RunWorkerCompleted += worker_RunWorkerCompleted!;
+            //worker.ProgressChanged += worker_ProgressChanged!;
+            worker.WorkerReportsProgress = false;
             worker.WorkerSupportsCancellation = true;
 
             Console.WriteLine("Starting worker... (any key to cancel/exit)");
@@ -113,18 +113,14 @@ namespace RX7Interface
 
 
 
-        static void worker_ProgressChanged(object _, ProgressChangedEventArgs e)
-        {
-            Console.WriteLine("Worker progress: {0:d}%", e.ProgressPercentage);
-        }
-
+      
 
 
         static void worker_RunWorkerCompleted(object _, RunWorkerCompletedEventArgs e)
         {
             if (e.Cancelled)
             {
-                Console.WriteLine("Worker: I wuz busy!");
+                Console.WriteLine("Worker: I was busy!");
                 return;
             }
 
@@ -136,7 +132,7 @@ namespace RX7Interface
         {
             BackgroundWorker? worker = sender as BackgroundWorker;
 
-            IDataStream dataStream = (IDataStream)e.Argument;
+            IDataStream dataStream = (IDataStream)e.Argument!;
 
             while (!e.Cancel)
             {
@@ -147,6 +143,12 @@ namespace RX7Interface
                     {
                         foreach (uint address in p.DataValue.Addresses)
                         {
+                            //Console.WriteLine($"cancel? {e.Cancel}");
+                            if (worker!.CancellationPending)
+                            {
+                                e.Cancel = true;
+                                break;
+                            }
                             Thread.Sleep(200);
                             try
                             {
@@ -160,7 +162,7 @@ namespace RX7Interface
                             ;
 
 
-                            worker.ReportProgress(0);
+                           // worker.ReportProgress(0);
                         }
 
 
